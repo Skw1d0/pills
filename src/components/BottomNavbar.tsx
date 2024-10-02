@@ -12,7 +12,10 @@ interface BottomNavigationProps {
 
 export const BottomNavbar = (props: BottomNavigationProps) => {
   return (
-    <Paper sx={{ position: "fixed", bottom: 0, left: 0, right: 0 }} square>
+    <Paper
+      sx={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 1 }}
+      square
+    >
       <BottomNavigation
         showLabels
         value={props.pageID}

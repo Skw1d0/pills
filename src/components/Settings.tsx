@@ -146,6 +146,7 @@ export const Settings = (props: SettingsProps) => {
                     addMedication(medicationName);
                     setMedicationName("");
                   }}
+                  disabled={medicationName === "" ? true : false}
                   startIcon={<Add />}
                 >
                   Hinzufügen
