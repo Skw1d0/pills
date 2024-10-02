@@ -1,6 +1,7 @@
 {
   "name": "pills",
   "version": "1.0.0",
+  "homepage": "https://skw1d0.github.io/pills/",
   "private": true,
   "dependencies": {
     "@emotion/react": "^11.13.3",
