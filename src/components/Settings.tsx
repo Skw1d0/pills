@@ -3,6 +3,7 @@ import {
   Contrast,
   DarkMode,
   Delete,
+  Google,
   LightMode,
 } from "@mui/icons-material";
 
@@ -15,13 +16,19 @@ import {
   List,
   ListItem,
   ListItemText,
+  Snackbar,
   TextField,
   ToggleButton,
   ToggleButtonGroup,
+  Typography,
 } from "@mui/material";
 import { useSettingsStore } from "../stores/settingsStore";
 import { useState } from "react";
 import { useCalendarStore } from "../stores/calendarStore";
+import { auth, provider } from "../Firebase/config";
+import { signInWithPopup, signOut } from "firebase/auth";
+// import { saveData, loadData } from "../Firebase/sync";
+import { useFirebase, SyncData } from "../hooks/useFirebase";
 
 interface SettingsProps {
   mode: string;
@@ -29,14 +36,20 @@ interface SettingsProps {
 }
 
 export const Settings = (props: SettingsProps) => {
+  const { saveData, loadData } = useFirebase();
+
   const {
     reset: resetSettings,
     addMedication,
     removeMedication,
+    getUser,
+    setUser,
     medications,
   } = useSettingsStore();
   const { reset: resetCalendar } = useCalendarStore();
   const [medicationName, setMedicationName] = useState("");
+  const [snackOpen, setSnackOpen] = useState(false);
+  const [snackMessage, setSnackMessage] = useState("");
 
   const handleChangeMedicationName = (
     event: React.ChangeEvent<HTMLInputElement>
@@ -53,8 +66,59 @@ export const Settings = (props: SettingsProps) => {
     }
   };
 
+  const handleCloseSnackBar = () => {
+    setSnackOpen(false);
+  };
+
+  const handleSignIn = async () => {
+    try {
+      const data = await signInWithPopup(auth, provider);
+      setUser(data.user.uid);
+    } catch {}
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await auth.signOut();
+      // auth.signOut();
+      setUser(null);
+    } catch {}
+  };
+
+  const handleSaveDate = async () => {
+    const result = await saveData();
+    if (result) {
+      setSnackMessage("Daten erfolgreich gespeichert.");
+      setSnackOpen(true);
+    } else {
+      setSnackMessage("Fehler beim Speichern der Daten.");
+      setSnackOpen(true);
+    }
+  };
+
+  const handleLoadDate = async () => {
+    const result: SyncData | null = await loadData();
+    if (result !== null) {
+      props.handleMode(result.settings.mode);
+    }
+
+    if (result !== null) {
+      setSnackMessage("Daten erfolgreich geladen.");
+      setSnackOpen(true);
+    } else {
+      setSnackMessage("Fehler beim Laden der Daten.");
+      setSnackOpen(true);
+    }
+  };
+
   return (
     <>
+      <Snackbar
+        open={snackOpen}
+        autoHideDuration={2000}
+        onClose={handleCloseSnackBar}
+        message={snackMessage}
+      />
       <Box sx={{ margin: 2, marginTop: { xs: 9, sm: 10 } }}>
         <Card sx={{ width: { xs: "100%", md: 600 }, padding: 1 }}>
           <CardHeader
@@ -93,8 +157,64 @@ export const Settings = (props: SettingsProps) => {
         <Card sx={{ width: { xs: "100%", md: 600 }, padding: 1 }}>
           <CardHeader
             sx={{ color: "primary.main" }}
-            title="Daten löschen"
-            subheader="Alle Daten unwiederbringlich löschen."
+            title="Daten syncronisieren"
+            subheader="Einstellungen und Kalendereinträge mit Google Firebase synchronisieren."
+          />
+          <CardContent>
+            {getUser() === "" ? (
+              <ListItem>
+                <Button
+                  onClick={handleSignIn}
+                  variant="contained"
+                  startIcon={<Google />}
+                >
+                  Login
+                </Button>
+              </ListItem>
+            ) : (
+              <>
+                <ListItem>
+                  <Typography>{auth.currentUser?.email}</Typography>
+                </ListItem>
+                <ListItem>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    sx={{ marginRight: 1 }}
+                    onClick={handleSaveDate}
+                  >
+                    Speichern
+                  </Button>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    sx={{ marginRight: 1 }}
+                    onClick={handleLoadDate}
+                  >
+                    Laden
+                  </Button>
+                  <Typography sx={{ flexGrow: 1 }}></Typography>
+                  <Button
+                    variant="outlined"
+                    color="error"
+                    startIcon={<Google />}
+                    onClick={handleSignOut}
+                  >
+                    Logout
+                  </Button>
+                </ListItem>
+              </>
+            )}
+          </CardContent>
+        </Card>
+      </Box>
+
+      <Box sx={{ margin: 2 }}>
+        <Card sx={{ width: { xs: "100%", md: 600 }, padding: 1 }}>
+          <CardHeader
+            sx={{ color: "primary.main" }}
+            title="Lokale Daten löschen"
+            subheader="Alle lokalen Daten unwiederbringlich löschen."
           />
           <CardContent>
             <List>

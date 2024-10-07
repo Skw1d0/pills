@@ -12,6 +12,7 @@ export interface CalendarState {
 }
 
 export interface CalendarActions {
+  setItems: (values: CalendarItem[]) => void;
   addItems: (values: CalendarItem[]) => void;
   removeItem: (id: string) => void;
   reset: () => void;
@@ -26,6 +27,10 @@ export const useCalendarStore = create<CalendarState & CalendarActions>()(
   persist(
     (set, get) => ({
       ...initialState,
+
+      setItems: (values: CalendarItem[]) => {
+        set({ items: values });
+      },
 
       addItems: (values: CalendarItem[]) => {
         const { items } = get();
