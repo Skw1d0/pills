@@ -1,24 +1,26 @@
 import { doc, getDoc, setDoc } from "firebase/firestore";
-import { auth, db } from "../Firebase/config";
-import { useSettingsStore } from "../stores/settingsStore";
-import { useCalendarStore } from "../stores/calendarStore";
+import { auth, db } from "../config/firebase";
+import { useSettingsStore, Medication } from "../stores/settingsStore";
+import { useCalendarStore, CalendarItem } from "../stores/calendarStore";
 
-export interface SettingsDate {
-  medications: Object;
+export interface SettingsData {
   mode: string;
+  medications: Medication[];
 }
 
 export interface SyncData {
-  settings: SettingsDate;
-  calendar: Object[];
+  syncTime: number | undefined;
+  settings: SettingsData;
+  calendar: CalendarItem[];
 }
 
-export const useFirebase = () => {
+export const useFirestore = () => {
   const { items, setItems } = useCalendarStore();
   const { medications, mode, setMedications, setMode } = useSettingsStore();
 
-  const saveData = async (): Promise<boolean> => {
+  const saveStoresToFirestore = async (): Promise<boolean> => {
     const newData: SyncData = {
+      syncTime: Date.now(),
       settings: { medications: medications, mode: mode },
       calendar: items,
     };
@@ -28,15 +30,14 @@ export const useFirebase = () => {
     try {
       const userDocRef = doc(db, "users", auth.currentUser?.uid);
       await setDoc(userDocRef, newData);
-      // console.log("Document written with ID: ", userDocRef.id);
       return true;
-    } catch (e) {
-      // console.error("Error adding document: ", e);
+    } catch (error) {
+      console.error(error);
       return false;
     }
   };
 
-  const loadData = async (): Promise<SyncData | null> => {
+  const loadDataFromFirestore = async (): Promise<SyncData | null> => {
     if (auth.currentUser?.uid === undefined) return null;
 
     try {
@@ -44,23 +45,22 @@ export const useFirebase = () => {
       const docSnapshot = await getDoc(userDocRef);
       if (docSnapshot.exists()) {
         const firestoreState = docSnapshot.data();
-        // console.log("Lade Zustand: ", firestoreState);
-        setMedications(firestoreState.settings.medications);
-        setMode(firestoreState.settings.mode);
-        setItems(firestoreState.calendar);
         return {
-          calendar: firestoreState.calendar,
+          syncTime: firestoreState.syncTime,
           settings: firestoreState.settings,
+          calendar: firestoreState.calendar,
         };
       } else {
-        // console.log("Keine Daten vorhanden.");
         return null;
       }
-    } catch (e) {
-      // console.error("Error adding document: ", e);
+    } catch (error) {
+      console.error(error);
       return null;
     }
   };
 
-  return { saveData, loadData };
+  return {
+    saveStoresToFirestore,
+    loadDataFromFirestore,
+  };
 };

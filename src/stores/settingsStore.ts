@@ -8,7 +8,6 @@ export interface Medication {
 }
 
 export interface SettingsState {
-  user: string;
   mode: string;
   medications: Medication[];
 }
@@ -17,8 +16,6 @@ export interface SettingsActions {
   setMedications: (value: Medication[]) => void;
   addMedication: (name: string) => void;
   removeMedication: (id: string) => void;
-  setUser: (value: string | null) => void;
-  getUser: () => string;
   setMode: (value: string) => void;
   getMode: () => string;
   reset: () => void;
@@ -26,7 +23,6 @@ export interface SettingsActions {
 
 // define the initial state
 const initialState: SettingsState = {
-  user: "",
   mode: "auto",
   medications: [],
 };
@@ -55,24 +51,11 @@ export const useSettingsStore = create<SettingsState & SettingsActions>()(
         set({ medications: newMedications });
       },
 
-      setUser: (value: string | null) => {
-        var newUser = "";
-        if (value !== null) {
-          newUser = value;
-        }
-        set({ user: newUser });
-      },
-
-      getUser: () => {
-        const { user } = get();
-        return user;
-      },
-
       setMode: (value: string) => {
         set({ mode: value });
       },
 
-      getMode: () => {
+      getMode: (): string => {
         const { mode } = get();
         return mode;
       },

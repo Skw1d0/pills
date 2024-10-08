@@ -15,6 +15,7 @@ import { StandardNavigation } from "./components/StandardNavigation";
 import { Add } from "./components/Add";
 import { lightTheme } from "./themes/lightTheme";
 import { darkTheme } from "./themes/darkTheme";
+import { AuthProvider } from "./context/AuthContext";
 
 function App() {
   const prefersDarkMode = useMediaQuery("(prefers-color-scheme: dark)");
@@ -49,59 +50,61 @@ function App() {
 
   return (
     <>
-      <ThemeProvider theme={isDarkMode ? darkTheme : lightTheme}>
-        <CssBaseline />
+      <AuthProvider>
+        <ThemeProvider theme={isDarkMode ? darkTheme : lightTheme}>
+          <CssBaseline />
 
-        {/* ADD */}
-        {pageID === 0 && (
-          <>
-            <StandardNavigation title={"Hinzufügen"} />
-            <Add />
-          </>
-        )}
-        {/* CALENDAR */}
-        {pageID === 1 && (
-          <>
-            <CalendarNavigation
-              selectedTime={selectedTime}
-              isDarkMode={isDarkMode}
-              handleNavigateNext={() =>
-                setSelectedTime(
-                  new Date(
-                    new Date(selectedTime).getFullYear(),
-                    new Date(selectedTime).getMonth() + 1,
-                    1
-                  ).getTime()
-                )
-              }
-              handleNavigateBefore={() => {
-                setSelectedTime(
-                  new Date(
-                    new Date(selectedTime).getFullYear(),
-                    new Date(selectedTime).getMonth() - 1,
-                    1
-                  ).getTime()
-                );
-              }}
-              handleNavigateToday={() => {
-                setSelectedTime(firstDayOfMonth);
-              }}
-            />
-            <Box sx={{ marginTop: 6 }}>
-              <Calendar isDarkMode={isDarkMode} startTime={selectedTime} />
-            </Box>
-          </>
-        )}
+          {/* ADD */}
+          {pageID === 0 && (
+            <>
+              <StandardNavigation title={"Hinzufügen"} />
+              <Add />
+            </>
+          )}
+          {/* CALENDAR */}
+          {pageID === 1 && (
+            <>
+              <CalendarNavigation
+                selectedTime={selectedTime}
+                isDarkMode={isDarkMode}
+                handleNavigateNext={() =>
+                  setSelectedTime(
+                    new Date(
+                      new Date(selectedTime).getFullYear(),
+                      new Date(selectedTime).getMonth() + 1,
+                      1
+                    ).getTime()
+                  )
+                }
+                handleNavigateBefore={() => {
+                  setSelectedTime(
+                    new Date(
+                      new Date(selectedTime).getFullYear(),
+                      new Date(selectedTime).getMonth() - 1,
+                      1
+                    ).getTime()
+                  );
+                }}
+                handleNavigateToday={() => {
+                  setSelectedTime(firstDayOfMonth);
+                }}
+              />
+              <Box sx={{ marginTop: 6 }}>
+                <Calendar isDarkMode={isDarkMode} startTime={selectedTime} />
+              </Box>
+            </>
+          )}
 
-        {/* SETTINGS */}
-        {pageID === 2 && (
-          <>
-            <StandardNavigation title={"Einstellungen"} />
-            <Settings mode={mode} handleMode={toggleMode} />)
-          </>
-        )}
-        <BottomNavbar handleSetPageID={setPageID} pageID={pageID} />
-      </ThemeProvider>
+          {/* SETTINGS */}
+          {pageID === 2 && (
+            <>
+              <StandardNavigation title={"Einstellungen"} />
+              <Settings mode={mode} handleMode={toggleMode} />)
+            </>
+          )}
+          <BottomNavbar handleSetPageID={setPageID} pageID={pageID} />
+        </ThemeProvider>
+      </AuthProvider>
     </>
   );
 }

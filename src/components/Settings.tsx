@@ -1,5 +1,7 @@
 import {
   Add,
+  CloudDownload,
+  CloudUpload,
   Contrast,
   DarkMode,
   Delete,
@@ -23,12 +25,10 @@ import {
   Typography,
 } from "@mui/material";
 import { useSettingsStore } from "../stores/settingsStore";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useCalendarStore } from "../stores/calendarStore";
-import { auth, provider } from "../Firebase/config";
-import { signInWithPopup, signOut } from "firebase/auth";
-// import { saveData, loadData } from "../Firebase/sync";
-import { useFirebase, SyncData } from "../hooks/useFirebase";
+import { useFirestore, SyncData } from "../hooks/useFirestore";
+import { useAuth } from "../context/AuthContext";
 
 interface SettingsProps {
   mode: string;
@@ -36,20 +36,32 @@ interface SettingsProps {
 }
 
 export const Settings = (props: SettingsProps) => {
-  const { saveData, loadData } = useFirebase();
-
+  const { saveStoresToFirestore, loadDataFromFirestore } = useFirestore();
+  const { user, googleSignIn, googleSignOut } = useAuth();
   const {
     reset: resetSettings,
     addMedication,
+    setMedications,
     removeMedication,
-    getUser,
-    setUser,
+    setMode,
     medications,
   } = useSettingsStore();
-  const { reset: resetCalendar } = useCalendarStore();
+  const { reset: resetCalendar, setItems } = useCalendarStore();
   const [medicationName, setMedicationName] = useState("");
   const [snackOpen, setSnackOpen] = useState(false);
   const [snackMessage, setSnackMessage] = useState("");
+  const [syncTime, setSyncTime] = useState<number | undefined>(undefined);
+
+  const days = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
+
+  useEffect(() => {
+    const getData = async () => {
+      const data = await loadDataFromFirestore();
+      setSyncTime(data?.syncTime);
+    };
+
+    getData();
+  }, []);
 
   const handleChangeMedicationName = (
     event: React.ChangeEvent<HTMLInputElement>
@@ -70,26 +82,12 @@ export const Settings = (props: SettingsProps) => {
     setSnackOpen(false);
   };
 
-  const handleSignIn = async () => {
-    try {
-      const data = await signInWithPopup(auth, provider);
-      setUser(data.user.uid);
-    } catch {}
-  };
-
-  const handleSignOut = async () => {
-    try {
-      await auth.signOut();
-      // auth.signOut();
-      setUser(null);
-    } catch {}
-  };
-
   const handleSaveDate = async () => {
-    const result = await saveData();
+    const result = await saveStoresToFirestore();
     if (result) {
       setSnackMessage("Daten erfolgreich gespeichert.");
       setSnackOpen(true);
+      setSyncTime(Date.now());
     } else {
       setSnackMessage("Fehler beim Speichern der Daten.");
       setSnackOpen(true);
@@ -97,12 +95,14 @@ export const Settings = (props: SettingsProps) => {
   };
 
   const handleLoadDate = async () => {
-    const result: SyncData | null = await loadData();
+    const result: SyncData | null = await loadDataFromFirestore();
     if (result !== null) {
       props.handleMode(result.settings.mode);
-    }
 
-    if (result !== null) {
+      setMode(result.settings.mode);
+      setMedications(result.settings.medications);
+      setItems(result.calendar);
+
       setSnackMessage("Daten erfolgreich geladen.");
       setSnackOpen(true);
     } else {
@@ -161,20 +161,31 @@ export const Settings = (props: SettingsProps) => {
             subheader="Einstellungen und Kalendereinträge mit Google Firebase synchronisieren."
           />
           <CardContent>
-            {getUser() === "" ? (
+            {user?.uid === undefined ? (
               <ListItem>
                 <Button
-                  onClick={handleSignIn}
+                  onClick={googleSignIn}
                   variant="contained"
                   startIcon={<Google />}
                 >
-                  Login
+                  Anmelden mit Google
                 </Button>
               </ListItem>
             ) : (
               <>
                 <ListItem>
-                  <Typography>{auth.currentUser?.email}</Typography>
+                  <ListItemText>{user?.email}</ListItemText>
+                </ListItem>
+                <ListItem>
+                  <ListItemText>
+                    Letzter Speicherstand: <br />
+                    {syncTime !== undefined
+                      ? days[new Date(syncTime).getDay()] +
+                        ", " +
+                        new Date(syncTime).toLocaleString() +
+                        " Uhr"
+                      : ""}
+                  </ListItemText>
                 </ListItem>
                 <ListItem>
                   <Button
@@ -198,9 +209,9 @@ export const Settings = (props: SettingsProps) => {
                     variant="outlined"
                     color="error"
                     startIcon={<Google />}
-                    onClick={handleSignOut}
+                    onClick={googleSignOut}
                   >
-                    Logout
+                    Abmelden
                   </Button>
                 </ListItem>
               </>
