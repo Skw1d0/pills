@@ -157,6 +157,60 @@ export const Settings = (props: SettingsProps) => {
         <Card sx={{ width: { xs: "100%", md: 600 }, padding: 1 }}>
           <CardHeader
             sx={{ color: "primary.main" }}
+            title="Medikamente"
+            subheader="Welche Medikamente nimmst du ein?"
+          />
+          <CardContent>
+            <List>
+              <ListItem>
+                <TextField
+                  id="outlined-basic"
+                  label="Medikament"
+                  variant="outlined"
+                  sx={{ flexGrow: 1, marginRight: 2 }}
+                  value={medicationName}
+                  onChange={handleChangeMedicationName}
+                />
+                <Button
+                  onClick={() => {
+                    addMedication(medicationName);
+                    setMedicationName("");
+                  }}
+                  disabled={medicationName === "" ? true : false}
+                  startIcon={<Add />}
+                >
+                  Hinzufügen
+                </Button>
+              </ListItem>
+            </List>
+
+            <Box sx={{ height: "20vh", overflow: "auto" }}>
+              <List>
+                {medications.map((medication) => (
+                  <ListItem key={medication.id} divider>
+                    <ListItemText
+                      sx={{ flexGrow: 1 }}
+                      primary={medication.name}
+                    />
+                    <Button
+                      onClick={() => removeMedication(medication.id)}
+                      startIcon={<Delete />}
+                    >
+                      Entfernen
+                    </Button>
+                    {/* <Divider variant="middle" /> */}
+                  </ListItem>
+                ))}
+              </List>
+            </Box>
+          </CardContent>
+        </Card>
+      </Box>
+
+      <Box sx={{ margin: 2 }}>
+        <Card sx={{ width: { xs: "100%", md: 600 }, padding: 1 }}>
+          <CardHeader
+            sx={{ color: "primary.main" }}
             title="Daten syncronisieren"
             subheader="Einstellungen und Kalendereinträge mit Google Firebase synchronisieren."
           />
@@ -220,7 +274,7 @@ export const Settings = (props: SettingsProps) => {
         </Card>
       </Box>
 
-      <Box sx={{ margin: 2 }}>
+      <Box sx={{ margin: 2, marginBottom: 10 }}>
         <Card sx={{ width: { xs: "100%", md: 600 }, padding: 1 }}>
           <CardHeader
             sx={{ color: "primary.main" }}
@@ -250,60 +304,6 @@ export const Settings = (props: SettingsProps) => {
                 </Button>
               </ListItem>
             </List>
-          </CardContent>
-        </Card>
-      </Box>
-
-      <Box sx={{ margin: 2, marginBottom: 10 }}>
-        <Card sx={{ width: { xs: "100%", md: 600 }, padding: 1 }}>
-          <CardHeader
-            sx={{ color: "primary.main" }}
-            title="Medikamente"
-            subheader="Welche Medikamente nimmst du ein?"
-          />
-          <CardContent>
-            <List>
-              <ListItem>
-                <TextField
-                  id="outlined-basic"
-                  label="Medikament"
-                  variant="outlined"
-                  sx={{ flexGrow: 1, marginRight: 2 }}
-                  value={medicationName}
-                  onChange={handleChangeMedicationName}
-                />
-                <Button
-                  onClick={() => {
-                    addMedication(medicationName);
-                    setMedicationName("");
-                  }}
-                  disabled={medicationName === "" ? true : false}
-                  startIcon={<Add />}
-                >
-                  Hinzufügen
-                </Button>
-              </ListItem>
-            </List>
-
-            <Box sx={{ height: "20vh", overflow: "auto" }}>
-              <List>
-                {medications.map((medication) => (
-                  <ListItem key={medication.id} divider>
-                    <ListItemText
-                      sx={{ flexGrow: 1 }}
-                      primary={medication.name}
-                    />
-                    <Button
-                      onClick={() => removeMedication(medication.id)}
-                      startIcon={<Delete />}
-                    >
-                      Entfernen
-                    </Button>
-                    {/* <Divider variant="middle" /> */}
-                  </ListItem>
-                ))}
-              </List>
-            </Box>
           </CardContent>
         </Card>
       </Box>
